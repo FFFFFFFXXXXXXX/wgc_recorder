@@ -32,6 +32,10 @@ use windows::{
         MediaStreamSample, MediaStreamSourceSampleRequestedEventArgs,
         MediaStreamSourceStartingEventArgs,
     },
+    Win32::{
+        Media::MediaFoundation::{MFShutdown, MFStartup, MFSTARTUP_FULL},
+        System::WinRT::{RoInitialize, RoUninitialize, RO_INIT_MULTITHREADED},
+    },
 };
 
 pub mod bitrate;
@@ -43,6 +47,8 @@ mod sample_generator;
 mod tests;
 mod utils;
 mod video_encoder;
+
+const MF_VERSION: u32 = 131184;
 
 pub struct RecorderSettings {
     pub window_title: String,
@@ -61,6 +67,11 @@ pub struct Recorder {
 
 impl Recorder {
     pub fn new(settings: RecorderSettings) -> WinResult<Self> {
+        unsafe {
+            RoInitialize(RO_INIT_MULTITHREADED)?;
+            MFStartup(MF_VERSION, MFSTARTUP_FULL)?;
+        }
+
         if !GraphicsCaptureSession::IsSupported()? {
             return Err(windows::core::Error::new(
                 HRESULT::default(),
@@ -226,6 +237,15 @@ impl Recorder {
             let _ = self.video_encoder.force_stop();
         } else {
             let _ = self.video_encoder.stop();
+        }
+    }
+}
+
+impl Drop for Recorder {
+    fn drop(&mut self) {
+        unsafe {
+            MFShutdown().unwrap();
+            RoUninitialize();
         }
     }
 }
