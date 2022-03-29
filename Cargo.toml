@@ -1,0 +1,36 @@
+[package]
+name = "wgc_recorder"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = "0.4.19"
+[dependencies.windows]
+version = "0.34.0"
+features = [
+    "Storage",
+    "Storage_Streams",
+    "Storage_FileProperties",
+    "Foundation",
+    "Foundation_Numerics",
+    "Media_Core",
+    "Media_MediaProperties",
+    "Media_Transcoding",
+    "Graphics_Capture",
+    "Graphics_DirectX_Direct3D11",
+    "Win32_Foundation",
+    "Win32_Graphics_Dwm",
+    "Win32_Graphics_Dxgi",
+    "Win32_Graphics_Dxgi_Common",
+    "Win32_Graphics_Direct3D",
+    "Win32_Graphics_Direct3D11",
+    "Win32_Media_MediaFoundation",
+    "Win32_System_Console",
+    "Win32_System_Performance",
+    "Win32_System_WinRT",
+    "Win32_System_WinRT_Direct3D11",
+    "Win32_System_WinRT_Graphics_Capture",
+    "Win32_UI_WindowsAndMessaging",
+]
