@@ -45,11 +45,11 @@ mod utils;
 mod video_encoder;
 
 pub struct RecorderSettings {
-    window_title: String,
-    output_resolution: Resolution,
-    framerate: Framerate,
-    bitrate: Bitrate,
-    capture_cursor: bool,
+    pub window_title: String,
+    pub output_resolution: Resolution,
+    pub framerate: Framerate,
+    pub bitrate: Bitrate,
+    pub capture_cursor: bool,
 }
 pub struct Recorder {
     is_recording: bool,
