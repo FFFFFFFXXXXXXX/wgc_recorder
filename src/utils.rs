@@ -62,10 +62,7 @@ pub fn create_compose_texture(
         ..Default::default()
     };
 
-    unsafe {
-        let texture = d3d_device.CreateTexture2D(&desc as *const _, std::ptr::null())?;
-        Ok(texture)
-    }
+    unsafe { d3d_device.CreateTexture2D(&desc as *const _, std::ptr::null()) }
 }
 
 pub fn create_capture_item_for_window(window_handle: HWND) -> Result<GraphicsCaptureItem> {
@@ -182,9 +179,7 @@ pub fn get_d3d_interface_from_object<S: Interface, R: Interface + Abi>(object: &
 
 pub fn get_texture_description(texture: &ID3D11Texture2D) -> D3D11_TEXTURE2D_DESC {
     let mut desc = D3D11_TEXTURE2D_DESC::default();
-    unsafe {
-        texture.GetDesc(&mut desc);
-    }
+    unsafe { texture.GetDesc(&mut desc) };
     return desc;
 }
 

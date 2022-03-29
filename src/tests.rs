@@ -29,6 +29,6 @@ fn record_firefox_1080p_30fps_18_mbit_10s() {
     };
     let mut recorder = Recorder::new(settings).expect("error creating recorder");
     recorder
-        .start(Some(std::time::Duration::from_secs(10)))
+        .start(Some(std::time::Duration::from_secs(60 * 10)))
         .expect("error starting recorder");
 }

@@ -63,7 +63,7 @@ impl Recorder {
     pub fn new(settings: RecorderSettings) -> WinResult<Self> {
         if !GraphicsCaptureSession::IsSupported()? {
             return Err(windows::core::Error::new(
-                HRESULT::default(),
+                HRESULT(-1),
                 HSTRING::from("Windows Graphics Capture API is not supported!"),
             ));
         }
@@ -110,11 +110,12 @@ impl Recorder {
                 MediaStreamSourceSampleRequestedEventArgs,
             >::new(move |_, args| {
                 let request = args.as_ref().unwrap().Request()?;
-                if let Some(sample) = sample_generator.generate()? {
+                if let Some(input_sample) = sample_generator.generate()? {
                     let sample = MediaStreamSample::CreateFromDirect3D11Surface(
-                        sample.texture,
-                        sample.timestamp,
+                        &input_sample.texture,
+                        input_sample.timestamp,
                     )?;
+                    input_sample.texture.Close()?;
                     request.SetSample(sample)?;
                 } else {
                     request.SetSample(None)?;
@@ -153,7 +154,7 @@ impl Recorder {
             });
         } else {
             return Err(windows::core::Error::new(
-                HRESULT::default(),
+                HRESULT(-1),
                 HSTRING::from("No window with that name found!"),
             ));
         }

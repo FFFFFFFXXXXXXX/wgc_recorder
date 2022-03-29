@@ -32,7 +32,6 @@ impl VideoEncoderInputSample {
     }
 }
 pub struct SampleGenerator {
-    d3d_device: ID3D11Device,
     d3d_context: ID3D11DeviceContext,
     multithread: ID3D11Multithread,
 
@@ -50,18 +49,15 @@ impl SampleGenerator {
     pub fn new(d3d_device: ID3D11Device, item: GraphicsCaptureItem) -> Result<Self> {
         let d3d_context = utils::get_d3d_context(&d3d_device)?;
         let multithread: ID3D11Multithread = d3d_context.cast()?;
-        unsafe {
-            multithread.SetMultithreadProtected(true);
-        }
-        let size = item.Size()?;
+        unsafe { multithread.SetMultithreadProtected(true) };
 
+        let size = item.Size()?;
         let compose_texture = utils::create_compose_texture(&d3d_device, size)?;
         let render_target_view = utils::create_render_target_view(&d3d_device, &compose_texture)?;
 
-        let frame_generator = CaptureFrameGenerator::new(d3d_device.clone(), item, size)?;
+        let frame_generator = CaptureFrameGenerator::new(d3d_device, item, size)?;
 
         Ok(Self {
-            d3d_device,
             d3d_context,
             multithread,
 
@@ -86,18 +82,7 @@ impl SampleGenerator {
     pub fn generate(&mut self) -> Result<Option<VideoEncoderInputSample>> {
         if let Some(frame) = self.frame_generator.try_get_next_frame()? {
             let result = self.generate_from_frame(&frame);
-            frame.Close()?;
-            match result {
-                Ok(sample) => Ok(Some(sample)),
-                Err(error) => {
-                    eprintln!(
-                        "Error during input sample generation: {:?} - {}",
-                        error.code(),
-                        error.message()
-                    );
-                    Ok(None)
-                }
-            }
+            return Ok(result.ok());
         } else {
             Ok(None)
         }
@@ -108,7 +93,6 @@ impl SampleGenerator {
         frame: &Direct3D11CaptureFrame,
     ) -> Result<VideoEncoderInputSample> {
         let frame_time = frame.SystemRelativeTime()?;
-
         let timestamp: TimeSpan;
         if !self.seen_first_time_stamp {
             self.first_timestamp = frame_time;
@@ -157,17 +141,13 @@ impl SampleGenerator {
                 &region,
             );
 
-            // Make a copy for the sample
-            let desc = utils::get_texture_description(&(self.compose_texture));
-            let sample_texture = self.d3d_device.CreateTexture2D(&desc, std::ptr::null())?;
-            self.d3d_context
-                .CopyResource(&sample_texture, &self.compose_texture);
-
-            let dxgi_surface: IDXGISurface = (&sample_texture).cast()?;
+            let dxgi_surface: IDXGISurface = self.compose_texture.cast()?;
             let d3d_surface: IDirect3DSurface =
                 CreateDirect3D11SurfaceFromDXGISurface(dxgi_surface)?.cast()?;
 
             self.multithread.Leave();
+            frame.Surface()?.Close()?;
+            frame.Close()?;
 
             Ok(VideoEncoderInputSample::new(timestamp, d3d_surface))
         }

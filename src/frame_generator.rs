@@ -1,5 +1,5 @@
 use std::{
-    sync::mpsc::{channel, Receiver, Sender},
+    sync::mpsc::{channel, Receiver, Sender, TryRecvError},
     time::Duration,
 };
 
@@ -36,24 +36,24 @@ impl CaptureFrameGenerator {
     ) -> Result<Self> {
         let device = utils::create_direct3d_device(&d3d_device)?;
         let frame_pool = Direct3D11CaptureFramePool::CreateFreeThreaded(
-            device,
+            &device,
             DirectXPixelFormat::B8G8R8A8UIntNormalized,
             1,
             size,
         )?;
+        device.Close()?;
+
         let session = frame_pool.CreateCaptureSession(&item)?;
 
         let (sender, receiver) = channel();
         frame_pool.FrameArrived(
             TypedEventHandler::<Direct3D11CaptureFramePool, IInspectable>::new({
-                let session = session.clone();
                 let sender = sender.clone();
                 move |frame_pool, _| {
                     let frame_pool = frame_pool.as_ref().unwrap();
                     let frame = frame_pool.TryGetNextFrame()?;
                     if sender.send(Some(frame)).is_err() {
                         frame_pool.Close()?;
-                        session.Close()?;
                     }
                     Ok(())
                 }
@@ -94,7 +94,10 @@ impl CaptureFrameGenerator {
             }
             // when there are no frames left return the last one
             match self.receiver.try_recv() {
-                Ok(item) => last_item = item,
+                Ok(item) => {
+                    let _ = last_item.expect("this error should never happen").Close();
+                    last_item = item
+                }
                 Err(_) => return Ok(last_item),
             }
         }
