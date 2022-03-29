@@ -61,6 +61,13 @@ pub struct Recorder {
 
 impl Recorder {
     pub fn new(settings: RecorderSettings) -> WinResult<Self> {
+        if !GraphicsCaptureSession::IsSupported()? {
+            return Err(windows::core::Error::new(
+                HRESULT::default(),
+                HSTRING::from("Windows Graphics Capture API is not supported!"),
+            ));
+        }
+
         let window = capture_item::find_window(settings.window_title);
         if let Some(handle) = window {
             let capture_item = utils::create_capture_item_for_window(handle)?;
@@ -144,12 +151,12 @@ impl Recorder {
                 capture_session,
                 video_encoder,
             });
+        } else {
+            return Err(windows::core::Error::new(
+                HRESULT::default(),
+                HSTRING::from("No window with that name found!"),
+            ));
         }
-
-        return Err(windows::core::Error::new(
-            HRESULT::default(),
-            HSTRING::from("No window with that name found!"),
-        ));
     }
 
     pub fn start(&mut self, duration: Option<std::time::Duration>) -> Result<(), String> {
