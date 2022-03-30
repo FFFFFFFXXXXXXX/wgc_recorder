@@ -95,7 +95,9 @@ impl CaptureFrameGenerator {
             // when there are no frames left return the last one
             match self.receiver.try_recv() {
                 Ok(item) => {
-                    let _ = last_item.expect("this error should never happen").Close();
+                    let li = last_item.unwrap();
+                    let _ = li.Surface().unwrap().Close();
+                    let _ = li.Close();
                     last_item = item
                 }
                 Err(_) => return Ok(last_item),

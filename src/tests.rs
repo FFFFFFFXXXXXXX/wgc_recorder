@@ -21,7 +21,7 @@ fn record_league_1080p_30fps_8_mbit_60s() {
 #[test]
 fn record_firefox_1080p_30fps_18_mbit_10s() {
     let settings = RecorderSettings {
-        window_title: String::from("Mozilla Firefox"),
+        window_title: String::from(" - Mozilla Firefox"),
         output_resolution: Resolution::_1080p,
         framerate: Framerate::new(30),
         bitrate: Bitrate::mbit(18),
@@ -29,6 +29,6 @@ fn record_firefox_1080p_30fps_18_mbit_10s() {
     };
     let mut recorder = Recorder::new(settings).expect("error creating recorder");
     recorder
-        .start(Some(std::time::Duration::from_secs(60 * 10)))
+        .start(Some(std::time::Duration::from_secs(10*60)))
         .expect("error starting recorder");
 }

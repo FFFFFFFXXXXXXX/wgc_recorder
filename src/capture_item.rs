@@ -36,7 +36,7 @@ extern "system" fn enum_window(window: HWND, state: LPARAM) -> BOOL {
         let state = Box::leak(Box::from_raw(state.0 as *mut Window));
 
         let wi = WindowInfo::new(window);
-        if wi.is_capturable_window() && wi.title == state.title {
+        if wi.is_capturable_window() && wi.title.contains(&state.title) {
             state.window = Some(wi.handle);
             return false.into();
         }
