@@ -79,7 +79,7 @@ impl CaptureFrameGenerator {
     }
 
     pub fn try_get_next_frame(&mut self) -> Result<Option<Direct3D11CaptureFrame>> {
-        // wait for at least one frame or cahannel disconnect
+        // wait for at least one frame or channel disconnect
         let mut last_item;
         match self.receiver.recv_timeout(Duration::from_secs(1)) {
             Ok(item) => last_item = item,

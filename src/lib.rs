@@ -123,14 +123,16 @@ impl Recorder {
                 Ok(())
             }))?;
 
-            let pair1 = Arc::new((Mutex::new(false), Condvar::new()));
-            let pair2 = Arc::clone(&pair1);
-            stream_source.Closed(TypedEventHandler::<_, _>::new(move |_, _| {
-                let (lock, cvar) = &*pair2;
-                let mut closed = lock.lock().unwrap();
-                *closed = true;
-                cvar.notify_one();
-                Ok(())
+            let pair = Arc::new((Mutex::new(false), Condvar::new()));
+            stream_source.Closed(TypedEventHandler::<_, _>::new({
+                let pair = Arc::clone(&pair);
+                move |_, _| {
+                    let (lock, cvar) = &*pair;
+                    let mut closed = lock.lock().unwrap();
+                    *closed = true;
+                    cvar.notify_one();
+                    Ok(())
+                }
             }))?;
 
             let output_stream = utils::create_output_stream()?;
@@ -148,7 +150,7 @@ impl Recorder {
             return Ok(Recorder {
                 is_recording: false,
                 stop_sender: sender,
-                closed_condvar: pair1,
+                closed_condvar: pair,
                 capture_session,
                 video_encoder,
             });
